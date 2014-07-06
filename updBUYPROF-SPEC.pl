@@ -25,7 +25,7 @@ if ( $month != 1 ) {
     $year -= 1;
 }
 
-$month = 2;
+$month = 3;
 $year = 2014;
 
 my $table_name;                          # Oracle table name to be updated
@@ -76,8 +76,8 @@ my $dbh;
 $dbh = DBI->connect( "dbi:Oracle:host=$dbhost;sid=$dbname", $dbuser, $dbpass )
   || die "Database connection not made: $DBI::errstr";
 
-my $sth = $dbh->prepare("insert into $table_name (custno,amount) 
-                         values(?,?)");
+my $sth = $dbh->prepare("insert into $table_name (custno,period,amount) 
+                         values(?,SYSDATE -96,?)");
 $ag_handle = new DB::Appgen file => "$ag_source";
 while ( $key = $ag_handle->next() ) {
     $ag_handle->seek( key => $key );
@@ -95,11 +95,12 @@ while ( $key = $ag_handle->next() ) {
 
     $sth->execute();
 
-    #print "insert into AR_BUYPROF values($data->[0],";
+    print "insert into AR_BUYPROF values($data->[0],to_date('01-MAR-2014'),";
+    print "$monthSales);\n";
 
-    print "Customer: $data->[0]\t  $monthSales\n ";
+    #print "Customer: $data->[0]\t  $monthSales\n ";
 
-    #last if $cnt == 5;
+    #last if $cnt == 10;
     $cnt++;
 }
 $sth->finish;
