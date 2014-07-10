@@ -9,5 +9,5 @@ mv /tmp/IV/IV-PCLASS.1 /tmp/IV-PCLASS
 mv /tmp/IV/IV-ITMFIL.1 /tmp/IV-ITMFIL
 mv /tmp/IV/IV-MCODE.1  /tmp/IV-MCODE
 mv /tmp/IV/IV-STATUS.1  /tmp/IV-STATUS
-
-rm -rf /tmp/AR /tmp/IV /tmp/OE
+mv /tmp/AP/AP-VENFIL.1 /tmp/AP-VENFIL
+rm -rf /tmp/AR /tmp/IV /tmp/OE /tmp/AP
