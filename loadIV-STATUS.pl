@@ -13,55 +13,46 @@ $ENV{ORACLE_SID}  = $ORACLE_SID;
 $ENV{ORACLE_HOME} = $ORACLE_HOME;
 $ENV{PATH}        = "$ORACLE_HOME/bin";
 
-my $year  = strftime "%y", localtime;    # get timestamp for file name
-my $month = strftime "%m", localtime;    # get timestamp for file name
+my $table_name;    # Oracle table name to be updated
+$table_name = "IV_STATUS";
 
-$year += 2000;
-
-if ( $month != 1 ) {
-    $month -= 1;                         # the previous month
-} else {
-    $month = 12;
-    $year -= 1;
-}
-
-my $table_name;                          # Oracle table name to be updated
-$table_name = "AR_BUYPROF";
-
-my $ag_handle;                           # Appgen database handle
+my $ag_handle;     # Appgen database handle
 
 # local native Appgen file to be processed
-my $ag_source = "/tmp/AR-BUYPROF";
+my $ag_source = "/tmp/IV-STATUS";
 
 my $key;
 my $db;
-my $data;
+my $record;
 
-my @currentMonth;
-my $mvNumber;
 my $mvCount;
-my $mvValue;
-my $monthSales;
+
+my $item      = "";
+my $whse      = "";
+my $committed = 0;
+my $available = 0;
+my $on_order  = 0;
+my $qoh       = 0;
+my $mtd       = 0;
+my $ytd       = 0;
 
 my $cnt = 0;
-
-print "current year is: $year\n";
-
-#exit;
+my $tcommit    = 0;
+my $ton_ord    = 0;
 
 $db = new DB::Appgen file => "$ag_source";
 
-my $DBHOST=shift;
-my $PASSWD=shift;
+my $DBHOST = shift;
+my $PASSWD = shift;
 
- if (!defined $DBHOST) {
-     print "No Oracle Host defined\n";
-     exit;
- }
- if (!defined $PASSWD) {
-     print "No Password defined\n";
-     exit;
- }
+if ( !defined $DBHOST ) {
+    print "No Oracle Host defined\n";
+    exit;
+}
+if ( !defined $PASSWD ) {
+    print "No Password defined\n";
+    exit;
+}
 
 my $dbhost = "$DBHOST";
 my $dbname = "XE";
@@ -72,32 +63,82 @@ my $dbh;
 $dbh = DBI->connect( "dbi:Oracle:host=$dbhost;sid=$dbname", $dbuser, $dbpass )
   || die "Database connection not made: $DBI::errstr";
 
-my $sth = $dbh->prepare("insert into $table_name (custno,amount) values(?,?)");
-$ag_handle = new DB::Appgen file => "$ag_source";
-while ( $key = $ag_handle->next() ) {
-    $ag_handle->seek( key => $key );
-    $data       = $ag_handle->record;
-    $mvCount    = $ag_handle->values_number( attribute => 13 );
-    $mvValue    = $ag_handle->extract( attribute => 13, value => $mvCount );
-    $monthSales = $ag_handle->extract( attribute => $month, value => $mvCount );
+my $rc = $dbh->do("delete from IV_STATUS");
+if ($rc) {
+    print "$rc status record(s) deleted\n";
+    sleep(5);
 
-    next if !defined($mvValue) or $mvValue != $year;
-    $monthSales = toNumber( $monthSales, 2 );
-    $sth->bind_param( 1, $data->[0] );
+    my $sth = $dbh->prepare(
+"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd) values(?,?,?,?,?,?,?,?)"
+    );
 
-    #$sth->bind_param(2,"$month/01/$year','mm/dd/yyyy");
-    $sth->bind_param( 2, $monthSales );
+    $ag_handle = new DB::Appgen file => "$ag_source";
+    while ( $key = $ag_handle->next() ) {
+        $ag_handle->seek( key => $key );
+        $record = $ag_handle->record;
+        $mvCount = 0;
+        $mvCount = $ag_handle->values_number( attribute => 9 );
 
-    $sth->execute();
+        $mvCount = 0 if ( !defined($mvCount) );
 
-    #print "insert into AR_BUYPROF values($data->[0],";
+        print "cnt $mvCount ";
 
-    print "Customer: $data->[0]\t  $monthSales\n ";
+        ( $item, $whse ) = split( /\*/, $record->[0], 2 );
+        $qoh = $ag_handle->extract( attribute => 8, value => 1 );
+        $qoh = toNumber( $qoh, 3 ) / 10;
 
-    #last if $cnt == 5;
-    $cnt++;
+        $mtd = $ag_handle->extract( attribute => 23, value => 1 );
+        $mtd = toNumber( $mtd, 3 ) / 10;
+
+        $ytd = $ag_handle->extract( attribute => 23, value => 2 );
+        $ytd = toNumber( $ytd, 3 ) / 10;
+
+        if ( $mvCount > 0 ) {
+            for ( my $i = 1; $i <= $mvCount; $i++ ) {
+                $tcommit = $ag_handle->extract( attribute => 12, value => $i );
+                $tcommit = 0 if ( !defined($tcommit) );
+                $committed += $tcommit;
+
+                $ton_ord = $ag_handle->extract( attribute => 13, value => $i );
+                $ton_ord  = 0 if ( !defined($ton_ord) );
+                $on_order += $ton_ord;
+
+                #print "$item:commit=>: $committed\n";
+
+            }    #end of for loop
+            $committed = toNumber( $committed, 3 ) / 10;
+            $on_order  = toNumber( $on_order,  3 ) / 10;
+
+        }    # end of if test for multi value in arrt 9
+        $available = $qoh - $committed;
+
+        $sth->bind_param( 1, $item );
+        $sth->bind_param( 2, $whse );
+        $sth->bind_param( 3, $available );
+        $sth->bind_param( 4, $committed );
+        $sth->bind_param( 5, $on_order );
+        $sth->bind_param( 6, $qoh );
+        $sth->bind_param( 7, $mtd );
+        $sth->bind_param( 8, $ytd );
+
+        $sth->execute();
+
+        print "$item\t qoh: $qoh\t Comtd: $committed\t";
+
+        print "Avail: $available\tOnOrd: $on_order\n ";
+
+        #last if $cnt == 5;
+        $cnt++;
+        $committed = 0;
+        $tcommit   = 0;
+        $available = 0;
+        $on_order  = 0;
+        $ton_ord   = 0;
+        $mtd       = 0;
+        $ytd       = 0;
+    }
+    $sth->finish;
 }
-$sth->finish;
 $dbh->disconnect;
 $ag_handle->close;
 
