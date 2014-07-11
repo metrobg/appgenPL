@@ -84,6 +84,7 @@ if ($rc) {
         print "cnt $mvCount ";
 
         ( $item, $whse ) = split( /\*/, $record->[0], 2 );
+     next if $whse ne "1";
         $qoh = $ag_handle->extract( attribute => 8, value => 1 );
         $qoh = toNumber( $qoh, 3 ) / 10;
 
