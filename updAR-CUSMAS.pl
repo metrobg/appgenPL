@@ -47,6 +47,7 @@ my $sales_ytd;
 my $class;
 my $type;
 my $salesrep;
+my $last_sale;
 
 $ag_handle = new DB::Appgen file => "$ag_source";
 
@@ -62,7 +63,8 @@ my $sth = $dbh->prepare(
                            cost_ytd   	= ?,
                            cclass     	= ?,
                            ctype    	= ?,
-                           salesrep   	= ? 
+                           salesrep   	= ?, 
+                           last_sale    = ?
                            where custno	= ?"
 );
 my $cnt = 0;
@@ -70,12 +72,17 @@ my $cnt = 0;
 while ( $key = $ag_handle->next() ) {
     $ag_handle->seek( key => $key );
     $record    = $ag_handle->record;
-    $cost_mtd  = toNumber( $record->[25] );
-    $cost_ytd  = toNumber( $record->[26] );
-    $sales_mtd = toNumber( $record->[23] );
-    $sales_ytd = toNumber( $record->[24] );
+#next if $record->[0] != 12615;
+    $cost_mtd  = toNumber( $record->[25],2 );
+    $cost_ytd  = toNumber( $record->[26],2 );
+    $sales_mtd = toNumber( $record->[23],2 );
+    $sales_ytd = toNumber( $record->[24],2 );
 
-    $sth->bind_param( 8, $record->[0] );     #item code
+  $last_sale = $record->[157];
+        $last_sale = 3 if !is_number($last_sale);
+
+
+    $sth->bind_param( 9, $record->[0] );     #item code
     $sth->bind_param( 1, $sales_mtd );       # sales MTD
     $sth->bind_param( 2, $sales_ytd );       # sales YTD
     $sth->bind_param( 3, $cost_mtd );        # cost MTD
@@ -83,8 +90,9 @@ while ( $key = $ag_handle->next() ) {
     $sth->bind_param( 5, $record->[46] );    # customer class
     $sth->bind_param( 6, $record->[9] );     # customer type
     $sth->bind_param( 7, $record->[8] );     # sales rep
+    $sth->bind_param( 8, $last_sale);        # last sale date (ag internal fmt)
     $sth->execute();
-    #print "$record->[0]\t cost MTD: $cost_mtd\t sales MTD: $sales_mtd\n";
+    print "$cnt $record->[0]\t cost MTD: $cost_mtd\t sales MTD: $sales_mtd Sale:$last_sale\n";
     $cnt++;
 
     #last if ($cnt == 150);
@@ -107,4 +115,12 @@ sub toNumber {
 
     return $value;
 }    # end of function
+
+sub is_number {
+    my $n   = shift;
+    my $ret = 1;
+    $SIG{"__WARN__"} = sub { $ret = 0 };
+    eval { my $x = $n + 1; };
+    return $ret;
+}
 
