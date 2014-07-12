@@ -17,17 +17,17 @@ $ENV{PATH}        = "$ORACLE_HOME/bin";
 #my $dbuser = "ves";
 #my $dbpass = "ifv44";
 
-my $DBHOST=shift;
-my $PASSWD=shift;
+my $DBHOST = shift;
+my $PASSWD = shift;
 
- if (!defined $DBHOST) {
-     print "No Oracle Host defined\n";
-     exit;
- }
- if (!defined $PASSWD) {
-     print "No Password defined\n";
-     exit;
- }
+if ( !defined $DBHOST ) {
+    print "No Oracle Host defined\n";
+    exit;
+}
+if ( !defined $PASSWD ) {
+    print "No Password defined\n";
+    exit;
+}
 
 my $dbhost = "$DBHOST";
 my $dbname = "XE";
@@ -38,7 +38,6 @@ my $ag_source = "/tmp/AR-CUSMAS";
 my $ag_handle = undef;
 
 my $table_name = "TMP_AR_CUSMAS";
-
 
 my $key = undef;
 my $record;
@@ -59,7 +58,7 @@ if ($rc) {
 
     $ag_handle = new DB::Appgen file => "$ag_source";
     my $sth = $dbh->prepare(
-        "insert into $table_name  
+        "insert into $table_name (NAME,ADDRESS1,ADDRESS2,CITY,STATE,ZIP,PHONE1,CONTRACT,PRICE_CATEGORY,CONTACT1,CONTACT2,PHONE2,FAX,EMAIL,URL,OTHER,SALES_MTD,SALES_YTD,COST_MTD,COST_YTD,CCLASS,CTYPE,SALESREP,CUSTNO,LAST_SALE) 
    values(initcap(?),
           initcap(?),
                   ?,
@@ -83,20 +82,24 @@ if ($rc) {
 		?,    
 		?,    
 		?,    
-		?)"   #custno
+                ?,
+		?)"    #custno
     );
 
-
-my $cnt = 0;
+    my $cnt       = 0;
+    my $last_sale = 3;
 
     while ( $key = $ag_handle->next() ) {
         $ag_handle->seek( key => $key );
         $record = $ag_handle->record;
 
-	$cost_mtd  = toNumber( $record->[25] );
-    	$cost_ytd  = toNumber( $record->[26] );
-    	$sales_mtd = toNumber( $record->[23] );
-    	$sales_ytd = toNumber( $record->[24] );
+        $last_sale = $record->[157];
+        $last_sale = 3 if !is_number($last_sale);
+
+        $cost_mtd  = toNumber( $record->[25] ,2);
+        $cost_ytd  = toNumber( $record->[26] ,2);
+        $sales_mtd = toNumber( $record->[23] ,2);
+        $sales_ytd = toNumber( $record->[24] ,2);
 
         $sth->bind_param( 1,  $record->[1] );     # name
         $sth->bind_param( 2,  $record->[2] );     #address1
@@ -122,15 +125,18 @@ my $cnt = 0;
         $sth->bind_param( 22, $record->[9] );     # customer type
         $sth->bind_param( 23, $record->[8] );     # sales rep
         $sth->bind_param( 24, $record->[0] );     #custno
-        print "customer \t $record->[0]\n";
+        $sth->bind_param( 25, $last_sale );       # last sale date
+        print "customer \t $record->[0]\t $last_sale\n";
         $sth->execute();
         $cnt++;
 
-        #last if ($cnt == 100);
+            #last if ($cnt == 100);
     }
-    
-     $sth = $dbh->prepare("insert into AR_CUSMAS select * from $table_name
-                         where custno not in (select custno from AR_CUSMAS)");
+
+    $sth = $dbh->prepare(
+        "insert into AR_CUSMAS select * from $table_name
+                         where custno not in (select custno from AR_CUSMAS)"
+    );
     $sth->execute();
     $sth->finish;
     $ag_handle->close;
@@ -139,7 +145,6 @@ my $cnt = 0;
     print "Unable to delete records from AR_CUSMAS table\n";
 }
 $dbh->disconnect;
-
 
 sub toNumber {
     my $value     = shift;
@@ -161,3 +166,10 @@ sub toNumber {
     return $value;
 }    # end of function
 
+sub is_number {
+    my $n   = shift;
+    my $ret = 1;
+    $SIG{"__WARN__"} = sub { $ret = 0 };
+    eval { my $x = $n + 1; };
+    return $ret;
+}
