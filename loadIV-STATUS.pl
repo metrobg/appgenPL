@@ -40,6 +40,10 @@ my $cnt = 0;
 my $tcommit    = 0;
 my $ton_ord    = 0;
 
+system("/home/ag6/bin/show $ag_source > /tmp/iv-keys");
+
+system("/home/ggraves/bin/import /tmp/iv-keys /tmp/IV-STATUS");
+
 $db = new DB::Appgen file => "$ag_source";
 
 my $DBHOST = shift;
