@@ -94,13 +94,9 @@ if ($rc) {
         $sth->bind_param( 13, $dealer );          # dealer price
         $sth->bind_param( 14, $record->[29] );    # mcode
 
-        $kosher = checkForNullChar( $record->[161] );  #kosher item (Y|N)
+        #$kosher = checkForNullChar( $record->[161] );  #kosher item (Y|N)
 
-        if ( ( $kosher eq "Y" ) || ( $kosher eq "N" ) ) {
-            $sth->bind_param( 15, $kosher );
-        } else {
-            $sth->bind_param( 15, "N" );
-        }
+        $sth->bind_param( 15, $record->[161] );
         $sth->bind_param( 16, $record->[15] );   # vendor number
         $sth->bind_param( 17, $record->[16] );   # vendor item number
 
