@@ -35,14 +35,17 @@ my $on_order  = 0;
 my $qoh       = 0;
 my $mtd       = 0;
 my $ytd       = 0;
+my $sales_mtd = 0;
+my $sales_ytd = 0;
+my $last_sold;
+my $last_recv;
 
 my $cnt = 0;
 my $tcommit    = 0;
 my $ton_ord    = 0;
 
-system("/home/ag6/bin/show $ag_source > /tmp/iv-keys");
-
 system("/home/ggraves/bin/import /tmp/iv-keys /tmp/IV-STATUS");
+
 
 $db = new DB::Appgen file => "$ag_source";
 
@@ -73,7 +76,7 @@ if ($rc) {
     sleep(5);
 
     my $sth = $dbh->prepare(
-"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd) values(?,?,?,?,?,?,?,?)"
+"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd,sales_mtd,sales_ytd,last_sold,last_recv) values(?,?,?,?,?,?,?,?,?,?,?,?)"
     );
 
     $ag_handle = new DB::Appgen file => "$ag_source";
@@ -95,8 +98,14 @@ if ($rc) {
         $mtd = $ag_handle->extract( attribute => 23, value => 1 );
         $mtd = toNumber( $mtd, 3 ) / 10;
 
+        $sales_mtd = $ag_handle->extract( attribute => 24, value => 1 );
+        $sales_mtd = toNumber( $sales_mtd, 2 ) ;
+
         $ytd = $ag_handle->extract( attribute => 23, value => 2 );
         $ytd = toNumber( $ytd, 3 ) / 10;
+
+        $sales_ytd = $ag_handle->extract( attribute => 24, value => 2 );
+        $sales_ytd = toNumber( $sales_ytd, 2 ) ;
 
         if ( $mvCount > 0 ) {
             for ( my $i = 1; $i <= $mvCount; $i++ ) {
@@ -125,6 +134,10 @@ if ($rc) {
         $sth->bind_param( 6, $qoh );
         $sth->bind_param( 7, $mtd );
         $sth->bind_param( 8, $ytd );
+        $sth->bind_param( 9, $sales_mtd );
+        $sth->bind_param( 10,$sales_ytd );
+        $sth->bind_param( 11,$record->[305] );
+        $sth->bind_param( 12,$record->[306]);
 
         $sth->execute();
 
