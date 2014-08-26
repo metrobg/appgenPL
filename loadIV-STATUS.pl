@@ -76,7 +76,7 @@ if ($rc) {
     sleep(5);
 
     my $sth = $dbh->prepare(
-"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd,sales_mtd,sales_ytd,last_sold,last_recv) values(?,?,?,?,?,?,?,?,?,?,?,?)"
+"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd,sales_mtd,sales_ytd,last_sold,last_recv,last_cost,avg_cost) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
     );
 
     $ag_handle = new DB::Appgen file => "$ag_source";
@@ -138,6 +138,8 @@ if ($rc) {
         $sth->bind_param( 10,$sales_ytd );
         $sth->bind_param( 11,$record->[305] );
         $sth->bind_param( 12,$record->[306]);
+        $sth->bind_param( 13,$record->[7]);    #last cost
+        $sth->bind_param( 14,$record->[6]);    #last cost
 
         $sth->execute();
 
