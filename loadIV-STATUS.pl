@@ -39,6 +39,7 @@ my $sales_mtd = 0;
 my $sales_ytd = 0;
 my $last_sold;
 my $last_recv;
+my $bin_loc;
 
 my $cnt = 0;
 my $tcommit    = 0;
@@ -76,7 +77,7 @@ if ($rc) {
     sleep(5);
 
     my $sth = $dbh->prepare(
-"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd,sales_mtd,sales_ytd,last_sold,last_recv,last_cost,avg_cost) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+"insert into $table_name (item,whse,available,committed,on_order,qoh,sold_mtd,sold_ytd,sales_mtd,sales_ytd,last_sold,last_recv,last_cost,avg_cost,bin) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
     );
 
     $ag_handle = new DB::Appgen file => "$ag_source";
@@ -117,6 +118,8 @@ if ($rc) {
                 $ton_ord  = 0 if ( !defined($ton_ord) );
                 $on_order += $ton_ord;
 
+                   $bin_loc =  $record->[1];
+                   $bin_loc = " " if (!defined($bin_loc) );
                 #print "$item:commit=>: $committed\n";
 
             }    #end of for loop
@@ -139,13 +142,14 @@ if ($rc) {
         $sth->bind_param( 11,$record->[305] );
         $sth->bind_param( 12,$record->[306]);
         $sth->bind_param( 13,$record->[7]);    #last cost
-        $sth->bind_param( 14,$record->[6]);    #last cost
+        $sth->bind_param( 14,$record->[6]);    #AVG cost
+        $sth->bind_param( 15,$record->[1]);    # bin location
 
         $sth->execute();
 
         print "$item\t qoh: $qoh\t Comtd: $committed\t";
 
-        print "Avail: $available\tOnOrd: $on_order\n ";
+        print "Avail: $available\tOnOrd: $on_order\t bin: $bin_loc\n ";
 
         #last if $cnt == 5;
         $cnt++;
