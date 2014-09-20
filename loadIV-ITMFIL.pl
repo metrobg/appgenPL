@@ -50,6 +50,20 @@ my $dealer;
 my $retail;
 my $kosher;
 
+my $catalog;
+my $seasonal;
+my $promotion;
+my $liquidation;
+my $special_order;
+my $sample;
+my $dry;
+my $chill;
+my $refer;
+my $frozen;
+my $publix;
+my $greenwise;
+
+
 my $dbh =
   DBI->connect( "dbi:Oracle:host=$dbhost;sid=$dbname", $dbuser, $dbpass )
   || die "Database connection not made: $DBI::errstr";
@@ -61,8 +75,8 @@ if ($rc) {
     $iv_itmfil = new DB::Appgen file => "$IV_ITMFIL";
     my $sth = $dbh->prepare(
         "insert into iv_itmfil (ITEM,SAMEAS,DESCRIPTION,SUBSTITUTE,PCLASS,
-                          UOFM,QB,LIST,QOH,COST,PKG,RETAIL,DEALER,MCODE,KOSHER,PRIMARY_VENDOR,VENDOR_ITEM)
-                         values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                          UOFM,QB,LIST,QOH,COST,PKG,RETAIL,DEALER,MCODE,KOSHER,PRIMARY_VENDOR,VENDOR_ITEM,CATALOG,SEASONAL,PROMOTION,LIQUIDATION,SPECIAL_ORDER,SAMPLE,DRY,CHILL,REFER,FROZEN,PUBLIX,GREENWISE,DIABETIC)
+                         values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
     );
     while ( $key = $iv_itmfil->next() ) {
         $iv_itmfil->seek( key => $key );
@@ -100,6 +114,47 @@ if ($rc) {
         $sth->bind_param( 16, $record->[15] );   # vendor number
         $sth->bind_param( 17, $record->[16] );   # vendor item number
 
+        $catalog = checkForNullChar($record->[165]);
+        $sth->bind_param( 18, $catalog );   #  Catalog flag
+
+        $seasonal = checkForNullChar($record->[166]);
+        $sth->bind_param( 19, $seasonal );   #  Seasonal flag
+
+        $promotion = checkForNullChar($record->[167]);
+        $sth->bind_param( 20, $promotion );   # promotional flag
+
+        $liquidation = checkForNullChar($record->[175]);
+        $sth->bind_param( 21, $liquidation );   # Liquadition flag
+
+        $special_order = checkForNullChar($record->[168]);
+        $sth->bind_param( 22, $special_order );   # Special Order flag
+
+        $sample = checkForNullChar($record->[169]);
+        $sth->bind_param( 23, $sample );   # Sample flag
+
+
+        $dry = checkForNullChar($record->[170]); 
+        $sth->bind_param( 24, $dry );   # Dry good flag
+
+        $chill = checkForNullChar($record->[176]);
+        $sth->bind_param( 25, $chill );   # Chill flag
+
+        $refer = checkForNullChar($record->[171]);
+        $sth->bind_param( 26, $refer );   # Refer
+
+        $frozen = checkForNullChar($record->[172]);
+        $sth->bind_param( 27, $frozen );   # Frozen flag
+
+        $publix = checkForNullChar($record->[173]);
+        $sth->bind_param( 28, $publix );   # Publix flag
+
+        $greenwise = checkForNullChar($record->[174]);
+        $sth->bind_param( 29, $greenwise );   # Greenwise flag
+        
+        $sth->bind_param( 30, checkForNullChar($record->[178] ));   # diabetic
+        
+       
+
         $sth->execute();
 
     }
@@ -121,7 +176,6 @@ sub checkForNull {
 }
 
 sub checkForNullChar {
-
     my $value = shift;
 
     if ( !defined $value ) {
