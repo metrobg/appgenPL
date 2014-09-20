@@ -121,8 +121,19 @@ if ($rc) {
         $sth->bind_param( 18, $sales_ytd );       # sales ytd
         $sth->bind_param( 19, $cost_mtd );        # cost mtd
         $sth->bind_param( 20, $cost_ytd );        # cost ytd
-        $sth->bind_param( 21, $record->[46] );    # customer class
-        $sth->bind_param( 22, $record->[9] );     # customer type
+
+        if(!defined($record->[46]) {
+            $sth->bind_param( 21, 15);    # customer class default  = 15
+        } else {
+            $sth->bind_param( 21, $record->[46] );    # customer class
+          }
+        if(!defined($record->[9]) {
+            $sth->bind_param( 21, "IN");    # customer class default  = IN
+        } else {
+            $sth->bind_param( 21, $record->[9] );    # customer type
+          }
+
+
         $sth->bind_param( 23, $record->[8] );     # sales rep
         $sth->bind_param( 24, $record->[0] );     #custno
         $sth->bind_param( 25, $last_sale );       # last sale date
