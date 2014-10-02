@@ -122,12 +122,12 @@ if ($rc) {
         $sth->bind_param( 19, $cost_mtd );        # cost mtd
         $sth->bind_param( 20, $cost_ytd );        # cost ytd
 
-        if(!defined($record->[46]) {
+        if(!defined($record->[46])) {
             $sth->bind_param( 21, 15);    # customer class default  = 15
         } else {
             $sth->bind_param( 21, $record->[46] );    # customer class
           }
-        if(!defined($record->[9]) {
+        if(!defined($record->[9])) {
             $sth->bind_param( 21, "IN");    # customer class default  = IN
         } else {
             $sth->bind_param( 21, $record->[9] );    # customer type
