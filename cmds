@@ -1,0 +1,5 @@
+put /tmp/IV-PCLASS /home/xsql/WEB-INF/cgi
+put /tmp/OE-PROMO /home/xsql/WEB-INF/cgi
+put /tmp/IV-ITMFIL /home/xsql/WEB-INF/cgi
+put /tmp/AR-CUSMAS /home/xsql/WEB-INF/cgi
+bye
