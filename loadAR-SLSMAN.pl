@@ -46,6 +46,8 @@ my $table_name = "AR_SLSMAN";
 my $key = undef;
 my $record;
 
+system("/home/ag6/bin/dbcp -k 0 -d /tmp/AR-SLSMAN /tmp/BLANK"); 
+# remove the house account prior to processing
 my $dbh =
   DBI->connect( "dbi:Oracle:host=$dbhost;sid=$dbname", $dbuser, $dbpass )
   || die "Database connection not made: $DBI::errstr";
