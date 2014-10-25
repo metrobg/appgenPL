@@ -75,8 +75,8 @@ if ($rc) {
     $iv_itmfil = new DB::Appgen file => "$IV_ITMFIL";
     my $sth = $dbh->prepare(
         "insert into iv_itmfil (ITEM,SAMEAS,DESCRIPTION,SUBSTITUTE,PCLASS,
-                          UOFM,QB,LIST,QOH,COST,PKG,RETAIL,DEALER,MCODE,KOSHER,PRIMARY_VENDOR,VENDOR_ITEM,CATALOG,SEASONAL,PROMOTION,LIQUIDATION,SPECIAL_ORDER,SAMPLE,DRY,CHILL,REFER,FROZEN,PUBLIX,GREENWISE,DIABETIC)
-                         values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+                          UOFM,QB,LIST,QOH,COST,PKG,RETAIL,DEALER,MCODE,KOSHER,PRIMARY_VENDOR,VENDOR_ITEM,CATALOG,SEASONAL,PROMOTION,LIQUIDATION,SPECIAL_ORDER,SAMPLE,DRY,CHILL,REFER,FROZEN,PUBLIX,GREENWISE,DIABETIC,SECTION,CHAPTER,PARAGRAPH,SEQUENCE)
+                         values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
     );
     while ( $key = $iv_itmfil->next() ) {
         $iv_itmfil->seek( key => $key );
@@ -152,6 +152,10 @@ if ($rc) {
         $sth->bind_param( 29, $greenwise );   # Greenwise flag
         
         $sth->bind_param( 30, checkForNullChar($record->[178] ));   # diabetic
+        $sth->bind_param( 31, $record->[179] );   # section
+        $sth->bind_param( 32, $record->[180] );   # chapter
+	$sth->bind_param( 33, $record->[181] );   # paragraph
+        $sth->bind_param( 34, $record->[182] );   # sequence
         
        
 
