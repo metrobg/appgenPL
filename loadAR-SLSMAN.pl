@@ -77,6 +77,7 @@ if ($rc) {
 
 $dbh->disconnect;
 $ag_handle->close;
+system("/bin/rm -f /tmp/BLANK"); # remove so subsequent runs won't fail 
 
 sub checkForNull {
 
