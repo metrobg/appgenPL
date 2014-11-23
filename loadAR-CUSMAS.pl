@@ -128,20 +128,20 @@ if ($rc) {
             $sth->bind_param( 21, $record->[46] );    # customer class
           }
         if(!defined($record->[9])) {
-            $sth->bind_param( 21, "IN");    # customer class default  = IN
+            $sth->bind_param( 22, "IN");    # customer class default  = IN
         } else {
-            $sth->bind_param( 21, $record->[9] );    # customer type
+            $sth->bind_param( 22, $record->[9] );    # customer type
           }
 
 
         $sth->bind_param( 23, $record->[8] );     # sales rep
         $sth->bind_param( 24, $record->[0] );     #custno
         $sth->bind_param( 25, $last_sale );       # last sale date
-        print "customer \t $record->[0]\t $last_sale\n";
+        print "customer \t $record->[0]\t Slsman: $record->[8]\t$last_sale\n";
         $sth->execute();
         $cnt++;
 
-            #last if ($cnt == 100);
+            #last if ($cnt == 10);
     }
 
     $sth = $dbh->prepare(
